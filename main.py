@@ -157,8 +157,6 @@ if retval:
     contours, hierarchy = cv2.findContours(image=imagem, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)
     gcode_list = contours_to_gcode(contours)
 
-    printer.write_gcodelist(gcode_list)
-
     image_copy = pic.copy()
     cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 2)
     cv2.imshow('thresh', image_copy)
