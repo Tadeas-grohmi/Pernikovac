@@ -4,6 +4,7 @@ import time
 class RpiGPIO():
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
+        GPIO.setwarnings(False)
         #pin 12 na LEDky pwm
         GPIO.setup(12, GPIO.OUT)  
         self.pwm = GPIO.PWM(12, 100)

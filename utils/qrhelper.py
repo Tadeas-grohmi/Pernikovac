@@ -70,6 +70,7 @@ def detect_3_qr_code(gpio):
         if len(qr_codes) == 3:
             print("3 QR codes detected!")
             led_bright = 0
+            gpio.led_brightness(led_bright)
             return photo
         else:
             led_bright += 5
