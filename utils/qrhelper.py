@@ -1,3 +1,5 @@
+import cv2
+
 def find_qr_corners(qr_corners, image_shape):
     # Get image width and height
     image_width = image_shape[1]
@@ -31,3 +33,53 @@ def find_qr_corners(qr_corners, image_shape):
         corner_coords = (x4, y4)
 
     return qr_position, corner_coords
+
+def detect_qrcode(image):
+    #detekce QR kodu s OpenCV qr detekci
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    qr_detector = cv2.QRCodeDetector()
+    retval, decoded_info, points, straight_qrcode = qr_detector.detectAndDecodeMulti(gray)
+    return retval, decoded_info, points, straight_qrcode, gray
+
+def detect_qr_codes(image):
+    qr_pos_list = []
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    qr_detector = cv2.QRCodeDetector()
+    retval, decoded_info, points, straight_qrcode = qr_detector.detectAndDecodeMulti(gray)
+
+    if retval:
+        for i in range(len(points)):
+            qr_corners = points[i].astype(int)
+            qr_position, corner_coords = find_qr_corners(qr_corners, image.shape)
+            qr_pos_list.append(qr_position)
+
+    return qr_pos_list
+
+def detect_3_qr_code():
+    led_bright = 0
+    while True:
+        # Capture a Full HD photo
+        photo = take_picture()
+
+        # Detect QR codes in the photo
+        qr_codes = detect_qr_codes(photo)
+
+        # Check if exactly 3 QR codes were detected
+        if len(qr_codes) == 3:
+            print("3 QR codes detected!")
+            led_bright = 0
+            return photo
+        else:
+            led_bright += 5
+            print(f"Detected {len(qr_codes)} QR codes. Retrying...")
+
+def take_picture():
+    #prvni foto
+    cap = cv2.VideoCapture(0)
+    #full hd rozliseni
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    #ukladani
+    result, image = cap.read()
+    cap.release()
+    return image
