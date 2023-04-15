@@ -18,8 +18,8 @@ from utils.gpio import *
 #Promenne
 DEBUG = False
 json_crop_list = {}
-
 gpio = RpiGPIO()
+
 
 #Po stopnuti, uklizeni
 def cleanup_function():
@@ -143,7 +143,7 @@ def decode_qr_code(image):
         cv2.line(image, (upperright), (lowerright), (0, 255, 0), thickness=3, lineType=8)
 
     # debug image
-    cv2.imshow('QR Codes', image)
+    #cv2.imshow('QR Codes', image)
 
     # Try crop fotky ze 4 bodu
     try:
@@ -165,14 +165,22 @@ def decode_qr_code(image):
     contours, hierarchy = cv2.findContours(image=imagem, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)
     image_copy = pic.copy()
     cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 2)
-    cv2.imshow('thresh', image_copy)    
+    #cv2.imshow('thresh', image_copy)    
+    time.sleep(5)
+    
+
+    return True
+    
     
 working = False
 
 while True:
-    if gpio.detect_push(10) and not working:
+    if gpio.detect_push(10):
+        working = True
         image = detect_3_qr_code(gpio)
-        decode_qr_code(image)
+        while True:
+            if decode_qr_code(image):
+                break
 
 
 #Aby se cv2 nezaviral
