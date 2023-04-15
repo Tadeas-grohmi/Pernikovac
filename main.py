@@ -5,6 +5,7 @@ time.sleep(1)
 printer.beep(300,100)
 printer.home()
 
+#Shukat jezky
 
 from PIL import Image
 from utils.gcode import *
