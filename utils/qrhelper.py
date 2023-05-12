@@ -62,7 +62,7 @@ def detect_3_qr_code(gpio):
     while True:
         # Capture a Full HD photo
         photo = take_picture()
-
+        
         # Detect QR codes in the photo
         qr_codes = detect_qr_codes(photo)
 

@@ -16,7 +16,7 @@ from utils.qrhelper import *
 from utils.gpio import *
 
 #Promenne
-DEBUG = False
+DEBUG = True
 json_crop_list = {}
 gpio = RpiGPIO()
 
@@ -116,7 +116,8 @@ def decode_qr_code(image):
             if(DEBUG):
                 for corner in qr_corners:
                     cv2.circle(image, (corner[0], corner[1]), 5, (0, 0, 255), -1)
-
+    
+    print(json_crop_list)
     #JSON rozklicovani
     bottomleftx = json_crop_list["bottomleftx"]
     bottomlefty = json_crop_list["bottomlefty"]
