@@ -8,11 +8,18 @@ def find_qr_corners(qr_corners, image_shape):
     # Sort the corners by x + y coordinate (left upper corner has smallest sum)
     qr_corners_sorted = sorted(qr_corners, key=lambda x: x[0] + x[1])
 
+    print(qr_corners_sorted)
+
     # Extract individual corner coordinates
     x1, y1 = qr_corners_sorted[0][0], qr_corners_sorted[0][1]
     x2, y2 = qr_corners_sorted[1][0], qr_corners_sorted[1][1]
     x3, y3 = qr_corners_sorted[2][0], qr_corners_sorted[2][1]
     x4, y4 = qr_corners_sorted[3][0], qr_corners_sorted[3][1]
+
+    print(x1, y1)
+    print(x2, y2)
+    print(x3, y3)
+    print(x4, y4)
 
     # Detect the QR code position based on corner coordinates
     if x1 < image_width / 2 and y1 < image_height / 2:
@@ -37,6 +44,7 @@ def find_qr_corners(qr_corners, image_shape):
 def detect_qrcode(image):
     #detekce QR kodu s OpenCV qr detekci
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    cv2.imshow("gray", gray)
     qr_detector = cv2.QRCodeDetector()
     retval, decoded_info, points, straight_qrcode = qr_detector.detectAndDecodeMulti(gray)
     return retval, decoded_info, points, straight_qrcode, gray
@@ -46,6 +54,8 @@ def detect_qr_codes(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     qr_detector = cv2.QRCodeDetector()
     retval, decoded_info, points, straight_qrcode = qr_detector.detectAndDecodeMulti(gray)
+
+    print(retval)
 
     if retval:
         for i in range(len(points)):

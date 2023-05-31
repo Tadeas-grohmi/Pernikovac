@@ -13,7 +13,7 @@ from utils.math import *
 from utils.qrhelper import *
 
 #Promenne
-DEBUG = False
+DEBUG = True
 json_crop_list = {}
 
 def decode_qr_code(image):
@@ -104,6 +104,8 @@ def decode_qr_code(image):
                 for corner in qr_corners:
                     cv2.circle(image, (corner[0], corner[1]), 5, (0, 0, 255), -1)
 
+    print(json_crop_list)
+
     #JSON rozklicovani
     bottomleftx = json_crop_list["bottomleftx"]
     bottomlefty = json_crop_list["bottomlefty"]
@@ -156,8 +158,11 @@ def decode_qr_code(image):
 
 
 
-image = detect_3_qr_code()
-decode_qr_code(image)
+#image = detect_3_qr_code()
+
+image2 = cv2.imread("test/test3.jpg")
+
+decode_qr_code(image2)
 
 #Aby se cv2 nezaviral
 cv2.waitKey(0)
