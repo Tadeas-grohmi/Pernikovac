@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from PIL import Image
 
 
 def load_detector():
@@ -113,3 +114,36 @@ def take_picture():
     result, image = cap.read()
     cap.release()
     return image
+
+
+def crop_pic(json_dict,lowerright, image):
+    try:
+        pil_img = Image.fromarray(image)
+        img_croped = pil_img.crop((json_dict["top_left"][0], json_dict["top_left"][1], lowerright[0], lowerright[1]))
+        # prevod na NP array, abych nemusel ukladat fotku
+        image_np = np.array(img_croped)
+        _, buffer = cv2.imencode('.jpg', image_np)
+        image_np = np.asarray(bytearray(buffer), dtype=np.uint8)
+        return image_np
+    except:
+        print("Error pri cropovani fotky")
+
+def get_contours(image_np, DEBUG):
+    pic = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    gray = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    ret, thresh = cv2.threshold(gray, 130, 255, cv2.THRESH_BINARY)
+    imagem = cv2.bitwise_not(thresh)
+    contours, hierarchy = cv2.findContours(image=imagem, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)
+    image_copy = pic.copy()
+    if DEBUG:
+        cv2.imshow('Tresh', thresh)
+        cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 2)
+
+    return contours, pic, image_copy
+
+
+
+
+
+
