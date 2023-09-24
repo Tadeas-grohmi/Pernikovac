@@ -1,25 +1,6 @@
 import serial, time
 import math
 
-def move_to_circle(n_points, center_x, center_y, radius, speed):
-    gcode = []
-    for i in range(n_points):
-        angle = 2 * math.pi * i / n_points
-        x = center_x + radius * math.cos(angle)
-        y = center_y + radius * math.sin(angle)
-        gcode.append("G1 X{} Y{} F{}".format(round(x, 3), round(y, 3), speed))
-
-    return gcode
-
-def move_to_heart(n_points, center_x, center_y, speed, size):
-    gcode = []
-    for i in range(n_points):
-        angle = 2 * math.pi * i / n_points
-        x = center_x + size*(16 * math.pow(math.sin(angle), 3))
-        y = center_y + size*(13 * math.cos(angle) - 5 * math.cos(2*angle) - 2 * math.cos(3*angle) - math.cos(4*angle))
-        gcode.append("G1 X{} Y{} F{}".format(round(x, 3), round(y, 3), speed))
-    return gcode
-
 class Printer():
 
     def __init__(self,COM, bedSize):

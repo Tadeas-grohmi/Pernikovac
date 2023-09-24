@@ -55,7 +55,6 @@ def bottom_left_corner(corner_coords):
     return list(bottom_left_corner)
 
 #Calculate the posionts of the points
-
 def crop_coords(image, midPointList,cornerList, DEBUG):
     image_shape = image.shape
     image_width = image_shape[1]
@@ -82,7 +81,7 @@ def crop_coords(image, midPointList,cornerList, DEBUG):
 
     if DEBUG:
         for coords in json_dict.values():
-            cv2.circle(image, (coords[0], coords[1]), 5, (255, 255, 0), -1)
+            cv2.circle(image, (coords[0], coords[1]), 5, (200, 255, 0), -1)
 
     return json_dict
 
@@ -130,18 +129,30 @@ def crop_pic(json_dict,lowerright, image):
 
 def get_contours(image_np, DEBUG):
     pic = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    pic = cv2.rotate(pic, cv2.ROTATE_180)
     gray = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
     ret, thresh = cv2.threshold(gray, 130, 255, cv2.THRESH_BINARY)
     imagem = cv2.bitwise_not(thresh)
     contours, hierarchy = cv2.findContours(image=imagem, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)
     image_copy = pic.copy()
+
+    x_min = 45  # Minimum X coordinate
+    x_max = 800  # Maximum X coordinate
+    y_min = 0  # Minimum Y coordinate
+    y_max = 765  # Maximum Y coordinate
+    # {'top_left': [590, 222], 'top_right': [1427, 222], 'bottom_left': [585, 1016]}
+
+    # Filter contours based on bounding rectangles
+    filtered_contours = [contour for contour in contours if x_min <= cv2.boundingRect(contour)[0] <= x_max
+                         and y_min <= cv2.boundingRect(contour)[1] <= y_max]
+
     if DEBUG:
         cv2.imshow('Tresh', thresh)
-        cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 2)
+        cv2.drawContours(image_copy, filtered_contours, -1, (255, 255, 0), 2)
+        cv2.imwrite("TEST.png", image_copy)
 
-    return contours, pic, image_copy
-
+    return filtered_contours, pic, image_copy
 
 
 

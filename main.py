@@ -4,14 +4,19 @@ import numpy as np
 import time
 from utils.arucoHelper import *
 from utils.math import *
+from utils.gcode import *
 from PIL import Image
 
 
 DEBUG = True
 
-image = cv2.imread("test/test3.jpg")
+image = cv2.imread("test/TEST.jpg")
 detector = load_detector()
 
+Right_top_offs = [0,0] # [-50,25]
+Left_top_offs = [0,0] # [20,30]
+Left_bottom_offs = [0,0] # [20,0]
+Right_bottom_offs = [0,0] # [10,0]
 
 
 def detect_object(image, detector):
@@ -19,13 +24,23 @@ def detect_object(image, detector):
     markerCorners, markerIds, rejectedCandidates = detector.detectMarkers(image)
     cornerList, midPointList = ArucoPoints(markerCorners, markerIds, image, DEBUG)
     json_dict = crop_coords(image, midPointList,cornerList, DEBUG)
+    json_dict = apply_offset(json_dict, Left_top_offs, Right_top_offs, Left_bottom_offs)
 
-    x, y = calculate_fourth_point(json_dict["top_left"][0], json_dict["top_left"][1], json_dict["top_right"][0], json_dict["top_right"][1], json_dict["bottom_left"][0], json_dict["bottom_left"][1])
+    if DEBUG:
+        for coords in json_dict.values():
+            cv2.circle(image, (coords[0], coords[1]), 5, (255, 190, 0), -1)
+
+    x, y = calculate_fourth_point(json_dict, Right_bottom_offs)
     lowerright = [int(x), int(y)]
+
+    cv2.circle(image, (lowerright[0], lowerright[1]), 5, (100, 255, 0), -1)
 
     image_np = crop_pic(json_dict,lowerright, image)
 
     contours, pic, image_copy = get_contours(image_np, DEBUG)
+
+    con_to_g(contours, image_copy)
+
 
     if DEBUG:
         cv2.imshow('Cropped', pic)
