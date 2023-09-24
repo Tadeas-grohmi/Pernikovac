@@ -150,7 +150,6 @@ def get_contours(image_np, DEBUG):
     if DEBUG:
         cv2.imshow('Tresh', thresh)
         cv2.drawContours(image_copy, filtered_contours, -1, (255, 255, 0), 2)
-        cv2.imwrite("TEST.png", image_copy)
 
     return filtered_contours, pic, image_copy
 
