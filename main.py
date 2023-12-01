@@ -8,9 +8,9 @@ from utils.gcode import *
 from PIL import Image
 
 
-DEBUG = True
+DEBUG = False
 
-image = cv2.imread("test/TEST.jpg")
+image = cv2.imread("test/main.png")
 detector = load_detector()
 
 Right_top_offs = [0,0] # [-50,25]
@@ -26,20 +26,22 @@ def detect_object(image, detector):
     json_dict = crop_coords(image, midPointList,cornerList, DEBUG)
     json_dict = apply_offset(json_dict, Left_top_offs, Right_top_offs, Left_bottom_offs)
 
+    print(json_dict)
+
     if DEBUG:
         for coords in json_dict.values():
-            cv2.circle(image, (coords[0], coords[1]), 5, (255, 190, 0), -1)
+            cv2.circle(image, (coords[0], coords[1]), 3, (255, 190, 0), -1)
 
     x, y = calculate_fourth_point(json_dict, Right_bottom_offs)
     lowerright = [int(x), int(y)]
 
-    cv2.circle(image, (lowerright[0], lowerright[1]), 5, (100, 255, 0), -1)
+    cv2.circle(image, (lowerright[0], lowerright[1]), 3, (100, 255, 0), -1)
 
     image_np = crop_pic(json_dict,lowerright, image)
 
     contours, pic, image_copy = get_contours(image_np, DEBUG)
 
-    con_to_g(contours, image_copy)
+    con_to_gcode(contours, image_copy, json_dict)
 
 
     if DEBUG:

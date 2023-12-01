@@ -2,3 +2,5 @@
 /utils-old/
 /.idea
 output.gcode
+calibrace_contours.py
+povrh_test.py

@@ -8,7 +8,7 @@ import numpy as np
 #     height = y2 - y1
 #     fourth_x = x3 + width
 #     fourth_y = y3 + height
-#     return fourth_x, fourth_y
+#     return fourth_x, fourth_
 
 
 def calculate_fourth_point(json, offset):
