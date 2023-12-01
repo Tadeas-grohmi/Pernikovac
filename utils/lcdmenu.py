@@ -4,6 +4,7 @@ import RPILCD.gpio as rpilcd
 import psutil
 import threading
 import subprocess
+from utils.utils import *
 
 #promenne UI
 BuzzerPin = 12
@@ -31,8 +32,6 @@ class Menu():
         GPIO.setup(ledpin,GPIO.OUT)
         self.led = GPIO.PWM(ledpin,10000)
         self.led.start(0)
-        
-        #GPIO.add_event_detect(encoderBut,GPIO.RISING,callback=self.encoder_button_callback, bouncetime=200) 
 
         #promenne
         self.rows = 4
@@ -50,14 +49,26 @@ class Menu():
         self.locked = False # Zamkly displej
         self.cursorLocked = False #Zamkly cursor
         self.arucoCalib = False # If je v aurco menu
-        self.led_zoff = False #Kdyz true tak se meni z_off, kdyz false tak ledky
+        self.info_line = 0 #Lajna v info panelu
         self.update_sensor = False
         self.printing = False
         self.in_printer_settings = False
         #promenne s zmenou
         self.led_brightness = 0
         self.z_offset = 0
+        self.extruder_rate = 0
         self.arucoPoint = 0 
+        
+        #vedlejsi promenne
+        self.json_file = './utils/data.json'
+        
+        #nacteni promennych 
+        self.json_data = read_json(self.json_file)
+        self.led_brightness = self.json_data["led_brightness"]
+        self.z_offset = self.json_data["z_offset"]
+        self.extruder_rate = self.json_data["extruder_rate"]
+        self.apply_duty()
+        
         self.setup()
         
     #cudl na enkoderu 
@@ -129,6 +140,7 @@ class Menu():
         self.lcd.create_char(0, celsius)
         self.lcd.create_char(1, pernicek)
         self.lcd.create_char(2, led)
+        
     
     #pohyb dolu v menu
     def moove_down(self):
@@ -168,7 +180,13 @@ class Menu():
                 self.kalibrace()
             if self.line == 3:
                 self.rpi_info()
-            
+    
+    #Zapis do json
+    def write_data(self):
+        self.json_data["led_brightness"] = self.led_brightness
+        self.json_data["z_offset"] = self.z_offset
+        self.json_data["extruder_rate"] = self.extruder_rate
+        write_json(self.json_file, self.json_data)
     
     #exit handle
     def on_exit_click(self):
@@ -181,25 +199,36 @@ class Menu():
             self.update_data = False
             self.update_sensor = False
             self.in_printer_settings = False
+            self.info_line = 0
+            self.line = 0
             sleep(0.01)
             self.lcd.clear()
             self.setup()
+            self.write_data()
     
     #prvni render infopanelu
     def infopanel(self):
         self.in_led_menu = True
         self.lcd.cursor_pos = (0,1)
         self.lcd.write_string(f'LEDky:{self.led_brightness}%')
-        if self.led_zoff:
-            self.lcd.cursor_pos = (3,0)
-            self.lcd.write_string(f'>')
-        else:
-            self.lcd.cursor_pos = (0,0)
-            self.lcd.write_string(f'>')
+        
+        match self.info_line:
+                case 0:
+                    self.lcd.cursor_pos = (0,0)
+                    self.lcd.write_string(f'>')
+                case 1:
+                    self.lcd.cursor_pos = (2,0)
+                    self.lcd.write_string(f'>')
+                case 2:
+                    self.lcd.cursor_pos = (3,0)
+                    self.lcd.write_string(f'>')
         
         self.lcd.cursor_pos = (1,0)
         for i in range(0, int(self.led_brightness/5)):
             self.lcd.write_string('\x02')
+        
+        self.lcd.cursor_pos = (2,1)
+        self.lcd.write_string(f'Extruder rate:{round(self.extruder_rate, 2)}')
         
         self.lcd.cursor_pos = (3,1)
         self.lcd.write_string(f'Z-offset:{round(self.z_offset, 1)}mm')
@@ -216,13 +245,20 @@ class Menu():
             
             if self.z_offset <= 0:
                 self.z_offset = 0.0
-                
-            if self.led_zoff:
-                self.lcd.cursor_pos = (3,0)
-                self.lcd.write_string(f'>')
-            else:
-                self.lcd.cursor_pos = (0,0)
-                self.lcd.write_string(f'>')
+            
+            if self.extruder_rate <=0:
+                self.extruder_rate = 0.0
+            
+            match self.info_line:
+                case 0:
+                    self.lcd.cursor_pos = (0,0)
+                    self.lcd.write_string(f'>')
+                case 1:
+                    self.lcd.cursor_pos = (2,0)
+                    self.lcd.write_string(f'>')
+                case 2:
+                    self.lcd.cursor_pos = (3,0)
+                    self.lcd.write_string(f'>')
             
             self.lcd.cursor_pos = (0,1)
             self.lcd.write_string(f'LEDky:{self.led_brightness}%')
@@ -230,6 +266,9 @@ class Menu():
             
             for i in range(0, int(self.led_brightness/5)):
                 self.lcd.write_string('\x02')
+            
+            self.lcd.cursor_pos = (2,1)
+            self.lcd.write_string(f'Extruder rate:{round(self.extruder_rate, 2)}')
             
             self.lcd.cursor_pos = (3,1)
             self.lcd.write_string(f'Z-offset:{round(self.z_offset, 1)}mm')
@@ -280,8 +319,6 @@ class Menu():
         self.lcd.cursor_pos = (3,1)
         self.lcd.write_string('Zatlacit trysku')
         
-    
-    
     #render kalibrace menu
     def kalibrace(self):
         self.lcd.clear()

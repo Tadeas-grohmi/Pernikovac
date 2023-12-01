@@ -4,12 +4,14 @@ from PIL import Image
 from cv2 import aruco
 from utils.math import *
 
+#Load detektoru pro aruco (novy python)
 def load_detector():
     dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
     parameters = cv2.aruco.DetectorParameters()
 
     return dictionary, parameters
 
+#Detekce aruco bodu
 def ArucoPoints(markerCorners, markerIds, image, DEBUG):
     corner_list = []
     midPoint_list = []
@@ -41,7 +43,6 @@ def ArucoPoints(markerCorners, markerIds, image, DEBUG):
 #Bottom right corner
 def bottom_right_corner(corner_coords):
     corner_coords = np.array(corner_coords)
-    # Find the index of the bottom-right corner
     bottom_right_index = np.argmax(corner_coords.sum(axis=1))
     bottom_right_corner = corner_coords[bottom_right_index]
     return list(bottom_right_corner)
@@ -49,13 +50,12 @@ def bottom_right_corner(corner_coords):
 #bottom left corner
 def bottom_left_corner(corner_coords):
     corner_coords = np.array(corner_coords)
-    # Find the index of the bottom-left corner
     bottom_left_index = np.argmin(corner_coords[:, 0])
     bottom_left_corner = corner_coords[bottom_left_index]
     return list(bottom_left_corner)
 
-#Calculate the posionts of the points
 
+#Klasifikace aruco bodu 
 def crop_coords(image, midPointList,cornerList, DEBUG):
     image_shape = image.shape
     image_width = image_shape[1]
@@ -86,18 +86,12 @@ def crop_coords(image, midPointList,cornerList, DEBUG):
 
     return json_dict
 
-
+#Kalibrace na 3 aruco body
 def detect_3_aruco_code(dictionary, parameters):
     led_bright = 0
     while True:
-        # Capture a Full HD photo
         photo = take_picture()
-
-        # Detect QR codes in the photo
-        #_, markerIds,_ = detector.detectMarkers(photo)
         _, markerIds, _ = aruco.detectMarkers(photo, dictionary, parameters=parameters)
-
-        # Check if exactly 3 QR codes were detected
         if len(markerIds) == 3:
             print("3 QR codes detected!")
             return photo
@@ -105,8 +99,8 @@ def detect_3_aruco_code(dictionary, parameters):
             led_bright += 5
             print(f"Detected {len(markerIds)} QR codes. Retrying...")
             
+#Full HD fotka, return cele image
 def take_picture():
-    #prvni foto
     cap = cv2.VideoCapture(0)
     #full hd rozliseni
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
@@ -117,7 +111,7 @@ def take_picture():
     cv2.imwrite("output.png", image)
     return image
 
-
+#Crop fotky z aruco bodu
 def crop_pic(json_dict,lowerright, image):
     try:
         pil_img = Image.fromarray(image)
@@ -130,12 +124,12 @@ def crop_pic(json_dict,lowerright, image):
     except:
         print("Error pri cropovani fotky")
 
+#Ziskani conturu
 def get_contours(image_np, DEBUG):
     pic = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
     #pic = cv2.rotate(pic, cv2.ROTATE_180)
     gray = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (13, 13), 0)
-    #ret, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
     
     max_value = 255  # Maximum value for threshold
     block_size = 951  # Size of the neighborhood area
@@ -152,6 +146,7 @@ def get_contours(image_np, DEBUG):
     y_min = 25  # Minimum Y coordinate 0
     y_max = 765  # Maximum Y coordinate 765 794
     
+    #Filtr nepotrebnych conturu (mimo dosah tiskarny)
     filtered_contours = [contour for contour in contours if x_min <= cv2.boundingRect(contour)[0] <= x_max
                          and y_min <= cv2.boundingRect(contour)[1] <= y_max]
     
@@ -167,13 +162,12 @@ def get_contours(image_np, DEBUG):
     middle_point = np.array(middle_point)
     npcontours = np.vstack(filtered_contours)
 
-    # Calculate the vector from each contour point to the middle point
-    vector_to_middle = middle_point - npcontours  # Calculate the vector
+    #Prostredek ze vsech body (vektor)
+    vector_to_middle = middle_point - npcontours 
 
-    # Define a scaling factor (adjust as needed)
-    scaling_factor = 0.3  # For example, half the distance towards the middle
+    scaling_factor = 0.2  #Scaling faktor
 
-    # Apply the vector to scale the contour towards the middle point
+    #Scaling bodu
     scaled_contour = npcontours + vector_to_middle * scaling_factor
     scaled_contour = scaled_contour.reshape((-1, 1, 2)).astype(np.int32)
     
@@ -186,12 +180,13 @@ def get_contours(image_np, DEBUG):
     
     return scaled_points, pic, image_copy
 
-
+#Offsety kdyby bylo potreba
 Right_top_offs = [0,0] # [-50,25] [0,-15]
 Left_top_offs = [0,0] # [20,30] [0,15]
 Left_bottom_offs = [0,0] # [20,0]
 Right_bottom_offs = [0,-10] # [10,0]
 
+#Main cast kodu
 def detect_object(image, dictionary, parameters, DEBUG):   
     detector = cv2.aruco.ArucoDetector(dictionary, parameters)
     markerCorners, markerIds, rejectedImgPoints = detector.detectMarkers(image)

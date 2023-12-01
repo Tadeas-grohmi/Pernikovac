@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 
+#Stara class
 class RpiGPIO():
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
