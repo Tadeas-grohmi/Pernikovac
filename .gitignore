@@ -1,7 +1,6 @@
 /test/
 /utils-old/
 /.idea
-/output.gcode
-/calibrace_contours.py
-/povrh_test.py
-
+output.gcode
+/povrh_testing.py
+/kalibrace_contours.py
