@@ -1,43 +1,25 @@
 import serial, time
 import math
-
-def move_to_circle(n_points, center_x, center_y, radius, speed):
-    gcode = []
-    for i in range(n_points):
-        angle = 2 * math.pi * i / n_points
-        x = center_x + radius * math.cos(angle)
-        y = center_y + radius * math.sin(angle)
-        gcode.append("G1 X{} Y{} F{}".format(round(x, 3), round(y, 3), speed))
-
-    return gcode
-
-def move_to_heart(n_points, center_x, center_y, speed, size):
-    gcode = []
-    for i in range(n_points):
-        angle = 2 * math.pi * i / n_points
-        x = center_x + size*(16 * math.pow(math.sin(angle), 3))
-        y = center_y + size*(13 * math.cos(angle) - 5 * math.cos(2*angle) - 2 * math.cos(3*angle) - math.cos(4*angle))
-        gcode.append("G1 X{} Y{} F{}".format(round(x, 3), round(y, 3), speed))
-    return gcode
+import serial.tools.list_ports
 
 class Printer():
-
-    def __init__(self,COM, bedSize):
+    def __init__(self,COM, bedSizeX,bedSizeY):
         self.COM = COM
-        self.max_X, self.max_Y = bedSize
+        self.max_X = bedSizeX
+        self.max_Y = bedSizeY
         self.position = (0,0)
         self.homed = False
         try:
             self.printerSerial = serial.Serial(COM,115200, timeout=25)
+            print("Connected")
         except:
             print("Connection error")
+            return 
 
     def WritePoints(self, xy):
         x,y = xy
-        x = self.max_X - x
-        self.position = xy
 
-        command = 'G1 F500 X%d Y%d\n' % (x, y) + 'G4 P1000\n' + 'G1 F500 X0 Y0\n'
+        command = 'G1 F1500 X%d Y%d\n' % (x, y)
 
         print(command.encode())
 
@@ -48,16 +30,46 @@ class Printer():
             return 0
 
     def home(self):
-        self.printerSerial.write(b'G28\n')
+        if not self.homed:
+            self.printerSerial.write(b'G28\n')
+            while True:
+                response = self.printerSerial.readline().decode().strip()
+                if response == 'ok':
+                    break
+    
+            self.homed = True
+    
+    def extruder(self, pos):
+        self.printerSerial.write(b'G92 E0\n')
+        while True:
+            response = self.printerSerial.readline().decode().strip()
+            if response == 'ok':
+                break
+        self.printerSerial.write('G1 E{} f500\n'.format(pos).encode())
+        while True:
+            response = self.printerSerial.readline().decode().strip()
+            if response == 'ok':
+                break
+        
+    
+    def home_startpos(self):
+        if not self.homed:
+            self.printerSerial.write(b'G28\n')
+            while True:
+                response = self.printerSerial.readline().decode().strip()
+                if response == 'ok':
+                    break
+        
+            self.homed = True
+        
+        self.printerSerial.write(b'G1 X0 Y210 F1000\n')
         while True:
             response = self.printerSerial.readline().decode().strip()
             if response == 'ok':
                 break
 
-        self.homed = True
-
     def elevateZ(self):
-        if self.homed is True:
+        if self.homed:
             self.printerSerial.write(b'G1 Z15 F1000\n')
             while True:
                 response = self.printerSerial.readline().decode().strip()
@@ -68,7 +80,7 @@ class Printer():
 
 
     def middleXY(self):
-        if self.homed is True:
+        if self.homed:
             self.printerSerial.write(b'G1 Z30 X100 Y100 F10000\n')
             while True:
                 response = self.printerSerial.readline().decode().strip()
@@ -78,7 +90,7 @@ class Printer():
             self.home()
 
     def getInfo(self):
-        self.printerSerial.write(b'M115 V\n')
+        self.printerSerial.write(b'M105\n')
         while True:
             response = self.printerSerial.readline().decode().strip()
             if response == 'ok':
@@ -86,18 +98,19 @@ class Printer():
             print(response)
 
     def getTemp(self):
-        self.printerSerial.write(b'M105 T\n')
+        self.printerSerial.write(b'M105\n')
         while True:
             response = self.printerSerial.readline().decode().strip()
             if response == 'ok':
                 break
+          
 
             split_string = response.split()
             for item in split_string:
                 if item.startswith("T:"):
                     T_value = item.replace("T:", "")
                     break
-
+                    
         return T_value
 
 
@@ -109,20 +122,33 @@ class Printer():
                 break
 
     def goToCords(self, xy):
-        x, y = xy
-        cmd = f"G1 F5000 X{x} Y{y}\n" + "G4 P10\n"
-        self.printerSerial.write(cmd.encode())
-
-    def write_gcodelist(self, gcode_list):
         if self.homed is not True:
             self.home()
-        else:
-            for line in gcode_list:
+        x, y = xy
+        cmd = f"G1 F1500 X{x} Y{y}\n" + "G4 P10\n"
+        self.printerSerial.write(cmd.encode())
+    
+    def stop_print(self):
+        self.printerSerial.write(b'M112\n')
+
+    
+    def write_gcodelist(self, gcode_list):
+        if not self.homed:
+            self.home()
+        for line in gcode_list:
+            try:
                 self.printerSerial.write((line + '\n').encode())
                 while True:
                     response = self.printerSerial.readline().decode().strip()
                     if response == 'ok':
                         break
-            self.middleXY()
+            except:
+                return True
+
+        
+        return True
+                        
+            
+
 
 

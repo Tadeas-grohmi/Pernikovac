@@ -154,7 +154,7 @@ class CharLCD(BaseCharLCD):
         # Setup GPIO
         GPIO.setmode(self.numbering_mode)
         for pin in list(filter(None, self.pins))[:-1]:
-            GPIO.setup(pin, GPIO.OUT)
+            GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
         if self.pins.backlight is not None:
             GPIO.setup(self.pins.backlight, GPIO.OUT)
 
@@ -232,7 +232,10 @@ class CharLCD(BaseCharLCD):
         """Write 4 bits of data into the data bus."""
         for i in range(4):
             bit = (value >> i) & 0x01
-            GPIO.output(self.pins[i + 7], bit)
+            try:
+                GPIO.output(self.pins[i + 7], bit)
+            except:
+                print(f"Wrong pin {(self.pins[i + 7], bit)}")
         self._pulse_enable()
 
     def _write8bits(self, value):
