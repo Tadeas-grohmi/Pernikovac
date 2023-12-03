@@ -108,7 +108,6 @@ def take_picture():
     #ukladani
     result, image = cap.read()
     cap.release()
-    cv2.imwrite("output.png", image)
     return image
 
 #Crop fotky z aruco bodu

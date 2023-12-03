@@ -43,9 +43,8 @@ clkLastState = GPIO.input(clk)
 
 #cudl na enkoderu 
 def encoder_button_callback(channel):
-    GPIO.remove_event_detect(encoderBut)
-    sleep(0.01)
-    event_setup()
+    #GPIO.remove_event_detect(encoderBut)
+    #event_setup()
     if not lcd_menu.in_manual_mode_menu:
         #Info panel
         if lcd_menu.in_led_menu:
@@ -95,28 +94,31 @@ def encoder_button_callback(channel):
             lcd_menu.on_click()
     #Manual mode aka zdobeni 
     else:
-        image = take_picture()
-        
-        print("START-------------------------------")
-        lcd_menu.printing = True
-        lcd_menu.print_menu()
-        contours, _, pic, json_dict = detect_object(image, dictionary, parameters, DEBUG)
-
-        gcode = con_to_gcode(contours,pic, json_dict, lcd_menu.extruder_rate, lcd_menu.z_offset)
-        
-        #for line in gcode:
-            #print(line)
+        try:
+            image = take_picture()
             
-        printer.write_gcodelist(gcode)
-        print("END---------------------------------")
-        lcd_menu.printing = False
-        lcd_menu.manualmode()
-    sleep(0.1)
+            print("START-------------------------------")
+            lcd_menu.printing = True
+            lcd_menu.print_menu()
+            contours, _, pic, json_dict = detect_object(image, dictionary, parameters, DEBUG)
+    
+            gcode = con_to_gcode(contours,pic, json_dict, lcd_menu.extruder_rate, lcd_menu.z_offset)
+            
+            #for line in gcode:
+                #print(line)
+                
+            printer.write_gcodelist(gcode)
+            print("END---------------------------------")
+            lcd_menu.printing = False
+            lcd_menu.manualmode()
+        except:
+            lcd_menu.printing = False
+            lcd_menu.manualmode()
       
 
 #Event na cudl na enkoderu
 def event_setup():
-    GPIO.add_event_detect(encoderBut,GPIO.RISING,callback=encoder_button_callback, bouncetime=500) 
+    GPIO.add_event_detect(encoderBut,GPIO.RISING,callback=encoder_button_callback, bouncetime=650) 
 
 #Main loop zde
 event_setup()
@@ -132,7 +134,7 @@ try:
            lcd_menu.printing = False
            lcd_menu.manualmode()
            printer.stop_print()   
-           event_setup() 
+           #event_setup() 
            
        #Enkoder a menu handle (hybani se atd)
        clkState = GPIO.input(clk)
@@ -178,15 +180,16 @@ try:
                    lcd_menu.apply_duty()
        #Ende
        clkLastState = clkState
-       sleep(0.01)
-       
+       sleep(0.02)
+
+except KeyboardInterrupt:
+    lcd.clear()
+
 #Po exitu se vycisti display a GPIO cleanup
 finally:
-   lcd.clear()
-   sleep(1)
-   GPIO.cleanup()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    lcd.clear()
+    sleep(2)
+    GPIO.cleanup()
 
-
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()

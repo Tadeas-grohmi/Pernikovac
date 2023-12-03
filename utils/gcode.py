@@ -22,7 +22,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
     y_max = image_height_pixels  #Max Y
 
     
-    gcode_commands.append(f'G1 Z10 F1000')
+    gcode_commands.append(f'G1 Z10 F2000')
     gcode_commands.append(f'G92 E0')
     
     current_extruder = 0.0 
@@ -41,7 +41,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
             x_pixel_mirror = middle_x_pixel - (x_pixel - middle_x_pixel)
             
             #Scaling pixely na mm pro GCODE
-            x_mm = ((x_pixel_mirror * x_scale) + 1)
+            x_mm = ((x_pixel_mirror * x_scale) + 0)
             y_mm = (y_pixel * y_scale) - 6
             
             #Uprava extruze
@@ -49,30 +49,30 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
                 current_extruder += extruder_increment * 1.5
             if i < 15:
                 current_extruder += extruder_increment  
-            elif i >= len(contours) - 20:
+            elif i >= len(contours) - 25:
                 current_extruder += default_extruder - extruder_decrement  
             else:
                 current_extruder += default_extruder  
             
-            #current_extruder = 0
+            current_extruder = 0
             
             #Start extruze u prvniho conturu
             if i == 0 and j == 0:
-                gcode_commands.append(f'G1 X{x_mm:.2f} Y{y_mm:.2f} Z{z_off + 5} E0 F1000.0')
+                gcode_commands.append(f'G1 X{x_mm:.2f} Y{y_mm:.2f} Z{z_off + 5} E0 F1500.0')
                 gcode_commands.append(f'G1 Z3.2 F200.0')
                 gcode_commands.append(f'G4 P150')
                 gcode_commands.append(f'G1 E50')
                 gcode_commands.append(f'G4 P850')
                 gcode_commands.append(f'G92 E0')
             else:
-                gcode_commands.append(f'G1 X{x_mm:.3f} Y{y_mm:.3f} Z{z_off} E{current_extruder:.3f} F200.0')
+                gcode_commands.append(f'G1 X{x_mm:.3f} Y{y_mm:.3f} Z{z_off} E{current_extruder:.3f} F220.0')
 
     #Retrakce extruderu
     gcode_commands.append(f'G4 P1000')
-    gcode_commands.append(f'G1 Z{z_off + 15} E{current_extruder - (current_extruder/2)} F500')
+    gcode_commands.append(f'G1 Z{z_off + 15} E{current_extruder - (current_extruder/2)} F350')
     
     #Moove do standby pozice
-    gcode_commands.append(f'G1 X0 Y210 Z20.0 F1000.0')
+    gcode_commands.append(f'G1 X0 Y210 Z20.0 F2000')
 
     return gcode_commands  
 
