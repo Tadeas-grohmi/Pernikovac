@@ -15,12 +15,6 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
 
     gcode_commands = []  
 
-    # Min, max pro spravny GCODE
-    x_min = 0  #Min X
-    x_max = image_width_pixels  #Max X
-    y_min = 0  #Min Y
-    y_max = image_height_pixels  #Max Y
-
     
     gcode_commands.append(f'G1 Z10 F2000')
     gcode_commands.append(f'G92 E0')
@@ -41,12 +35,12 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
             x_pixel_mirror = middle_x_pixel - (x_pixel - middle_x_pixel)
             
             #Scaling pixely na mm pro GCODE
-            x_mm = ((x_pixel_mirror * x_scale) + 0)
+            x_mm = ((x_pixel_mirror * x_scale) + 1)
             y_mm = (y_pixel * y_scale) - 6
             
             #Uprava extruze
             if i < 5:
-                current_extruder += extruder_increment * 1.5
+                current_extruder += extruder_increment * 1.8
             if i < 15:
                 current_extruder += extruder_increment  
             elif i >= len(contours) - 25:
@@ -54,7 +48,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
             else:
                 current_extruder += default_extruder  
             
-            current_extruder = 0
+            #current_extruder = 0
             
             #Start extruze u prvniho conturu
             if i == 0 and j == 0:
@@ -65,7 +59,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
                 gcode_commands.append(f'G4 P850')
                 gcode_commands.append(f'G92 E0')
             else:
-                gcode_commands.append(f'G1 X{x_mm:.3f} Y{y_mm:.3f} Z{z_off} E{current_extruder:.3f} F220.0')
+                gcode_commands.append(f'G1 X{x_mm:.3f} Y{y_mm:.3f} Z{z_off} E{current_extruder:.3f} F200.0')
 
     #Retrakce extruderu
     gcode_commands.append(f'G4 P1000')

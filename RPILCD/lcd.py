@@ -105,14 +105,14 @@ class BaseCharLCD(object):
             self.command(0x03)
             c.msleep(4.5)
             self.command(0x03)
-            c.usleep(100)
+            c.usleep(120)
             self.command(0x02)
         elif self.data_bus_mode == c.LCD_8BITMODE:
             # Hitachi manual page 45
             self.command(0x30)
             c.msleep(4.5)
             self.command(0x30)
-            c.usleep(100)
+            c.usleep(120)
             self.command(0x30)
         else:
             raise ValueError('Invalid data bus mode: {}'.format(self.data_bus_mode))
@@ -130,7 +130,9 @@ class BaseCharLCD(object):
         # Clear display
         self.clear()
         self.command(0x01)
+        c.msleep(4.5)
         self.command(0x33)
+        c.msleep(4.5)
         self.command(0x32)
         
         

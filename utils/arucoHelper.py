@@ -159,6 +159,7 @@ def get_contours(image_np, DEBUG):
           break
 
     middle_point = np.array(middle_point)
+
     npcontours = np.vstack(filtered_contours)
 
     #Prostredek ze vsech body (vektor)
@@ -177,7 +178,7 @@ def get_contours(image_np, DEBUG):
     
     scaled_points = [[[[x, y]]] for [[x, y]] in scaled_contour]
     
-    return scaled_points, pic, image_copy
+    return scaled_points, pic, image_copy, middle_point
 
 #Offsety kdyby bylo potreba
 Right_top_offs = [0,0] # [-50,25] [0,-15]
@@ -199,7 +200,7 @@ def detect_object(image, dictionary, parameters, DEBUG):
 
     image_np = crop_pic(json_dict,lowerright, image)
 
-    contours, pic, image_copy = get_contours(image_np, DEBUG)
+    contours, pic, image_copy, middle_point = get_contours(image_np, DEBUG)
 
     if DEBUG:
         for coords in json_dict.values():
@@ -210,7 +211,7 @@ def detect_object(image, dictionary, parameters, DEBUG):
         cv2.imshow("Detected Markers", image) 
         cv2.imwrite("idk.png", image)
     
-    return contours, pic, image_copy, json_dict
+    return contours, pic, image_copy, json_dict, middle_point
 
 
 

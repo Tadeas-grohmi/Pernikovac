@@ -42,6 +42,12 @@ COMPAT_MODE_WAIT_TIME = 0.001
 
 PinConfig = namedtuple('PinConfig', 'rs rw e d0 d1 d2 d3 d4 d5 d6 d7 backlight mode')
 
+#self._send_instruction(0x33)
+#self._send_instruction(0x32)
+#self._send_instruction(0x06)
+#self._send_instruction(0x0C)
+#self._send_instruction(0x28)
+#self._send_instruction(0x01)
 
 class CharLCD(BaseCharLCD):
     def __init__(self, numbering_mode=None, pin_rs=None, pin_rw=None, pin_e=None, pins_data=None,
@@ -142,12 +148,17 @@ class CharLCD(BaseCharLCD):
         # Set backlight status
         if pin_backlight is not None:
             self.backlight_enabled = backlight_enabled
-        
+            
         self._send_instruction(0x33)
+        c.msleep(20)
         self._send_instruction(0x32)
+        c.msleep(20)
         self._send_instruction(0x06)
+        c.msleep(20)
         self._send_instruction(0x0C)
+        c.msleep(20)
         self._send_instruction(0x28)
+        c.msleep(20)
         self._send_instruction(0x01)
 
     def _init_connection(self):

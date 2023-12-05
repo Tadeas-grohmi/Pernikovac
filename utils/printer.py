@@ -62,7 +62,7 @@ class Printer():
         
             self.homed = True
         
-        self.printerSerial.write(b'G1 X0 Y210 F1000\n')
+        self.printerSerial.write(b'G1 X0 Y210 Z30 F1000\n')
         while True:
             response = self.printerSerial.readline().decode().strip()
             if response == 'ok':
@@ -70,7 +70,7 @@ class Printer():
 
     def elevateZ(self):
         if self.homed:
-            self.printerSerial.write(b'G1 Z15 F1000\n')
+            self.printerSerial.write(b'G1 Z40 F1000\n')
             while True:
                 response = self.printerSerial.readline().decode().strip()
                 if response == 'ok':
@@ -131,6 +131,76 @@ class Printer():
     def stop_print(self):
         self.printerSerial.write(b'M112\n')
 
+    def get_z(self, json_dict, middle_point, image, tof):
+        if not self.homed:
+            self.home()
+            sleep = 25
+        else:
+            sleep = 5
+        
+        samples = 10
+        distance1 = 0
+        distance2 = 0
+        
+        command = 'G1 X20 Y180 Z30 F2500\n'
+        self.printerSerial.write(command.encode())
+        while True:
+            response = self.printerSerial.readline().decode().strip()
+            if response == 'ok':
+                break
+                
+        time.sleep(sleep)
+            
+        for count in range(0,samples + 1):
+            distance = tof.get_distance()
+            if distance > 0:
+                distance1 += distance
+            
+            time.sleep(0.02)
+        
+        time.sleep(1)
+        
+        #Kod z GCODE.py, pro prevedni z pixelu na gcode
+        printer_x_length_mm = 215  
+        printer_y_length_mm = 200  
+        width = json_dict['top_right'][0] - json_dict['top_left'][0]
+        height = json_dict['bottom_left'][1] - json_dict['top_left'][1]
+        image_height_pixels, image_width_pixels, _ = image.shape
+        x_scale = printer_x_length_mm / width 
+        y_scale = printer_y_length_mm / height  
+        middle_x_pixel = image_width_pixels // 2
+        x_pixel_mirror = middle_x_pixel - (middle_point[0] - middle_x_pixel)
+        x_mm = round(((x_pixel_mirror * x_scale) + 0), 2)
+        y_mm = round((middle_point[1] * y_scale) - 6, 2)
+        
+        command = 'G1 X%d Y%d Z30 F2500\n' % (x_mm - 21, y_mm + 1)
+        self.printerSerial.write(command.encode())
+        while True:
+            response = self.printerSerial.readline().decode().strip()
+            if response == 'ok':
+                break
+        
+        time.sleep(5)
+        
+        for count in range(0,samples + 1):
+            distance = tof.get_distance()
+            if distance > 0:
+                distance2 += distance
+            
+            time.sleep(0.02)
+        
+        distance1 = distance1/samples
+        distance2 = distance2/samples
+        vysledek = round((distance2 - distance1), 1)
+        printer_in = round(((vysledek * 2) + 0)/10, 1)
+        
+        self.printerSerial.write(b'G1 X0 Y210 Z10 F1000\n')
+        while True:
+            response = self.printerSerial.readline().decode().strip()
+            if response == 'ok':
+                break
+        
+        return printer_in
     
     def write_gcodelist(self, gcode_list):
         if not self.homed:

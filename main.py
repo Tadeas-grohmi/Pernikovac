@@ -10,6 +10,7 @@ from utils.printer import *
 from utils.lcdmenu import *
 from utils.gcode import *
 import RPILCD.gpio as rpilcd
+from utils.VLX.VL53L0X_python.python import VL53L0X
 
 #Promenne
 DEBUG = False
@@ -35,7 +36,12 @@ dictionary, parameters = load_detector()
 #deklarace displeje
 lcd = rpilcd.CharLCD(pin_rs=LCD_RS, pin_e=LCD_E, pins_data=[LCD_D4, LCD_D5, LCD_D6, LCD_D7], numbering_mode=GPIO.BCM)
 
-printer = Printer("/dev/ttyACM0",210,200)
+#Nacteni tiskarny
+printer = Printer("/dev/ttyACM0",215,200)
+
+#Nacteni TOF senzoru
+tof = VL53L0X.VL53L0X(i2c_bus=1,i2c_address=0x29)
+tof.open() 
 
 #LCD menu deklarace
 lcd_menu = Menu(lcd)
@@ -83,9 +89,15 @@ def encoder_button_callback(channel):
         elif lcd_menu.in_printer_settings:
             line = lcd_menu.line
             if line == 0:
-                printer.home()
-            elif line == 1:
                 printer.goToCords((0,210))
+            elif line == 1:
+                image = take_picture()
+                _, _, pic, json_dict, middle_point = detect_object(image, dictionary, parameters, DEBUG)
+                tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BEST)
+                zoff = printer.get_z(json_dict, middle_point, pic, tof)
+                tof.stop_ranging()
+                lcd_menu.z_offset = zoff
+                lcd_menu.write_data()
             elif line == 2:
                 printer.extruder(-10)
             elif line == 3:
@@ -100,8 +112,8 @@ def encoder_button_callback(channel):
             print("START-------------------------------")
             lcd_menu.printing = True
             lcd_menu.print_menu()
-            contours, _, pic, json_dict = detect_object(image, dictionary, parameters, DEBUG)
-    
+            contours, _, pic, json_dict, middle_point = detect_object(image, dictionary, parameters, DEBUG)
+            
             gcode = con_to_gcode(contours,pic, json_dict, lcd_menu.extruder_rate, lcd_menu.z_offset)
             
             #for line in gcode:
@@ -111,7 +123,8 @@ def encoder_button_callback(channel):
             print("END---------------------------------")
             lcd_menu.printing = False
             lcd_menu.manualmode()
-        except:
+        except Exception as e:
+            print(f"An exception occurred: {e}")
             lcd_menu.printing = False
             lcd_menu.manualmode()
       
@@ -187,9 +200,10 @@ except KeyboardInterrupt:
 
 #Po exitu se vycisti display a GPIO cleanup
 finally:
+    lcd.clear()
+    tof.close()
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    lcd.clear()
     sleep(2)
     GPIO.cleanup()
 

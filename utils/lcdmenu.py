@@ -60,7 +60,9 @@ class Menu():
         self.arucoPoint = 0 
         
         #vedlejsi promenne
-        self.json_file = './utils/data.json'
+        #/home/pi/Desktop/Pernikovac/utils/
+        #python /home/pi/Desktop/Pernikovac/main.py
+        self.json_file = '/home/pi/Desktop/Pernikovac/utils/data.json'
         
         #nacteni promennych 
         self.json_data = read_json(self.json_file)
@@ -311,9 +313,9 @@ class Menu():
         self.lcd.cursor_pos = (self.line, 0)
         self.lcd.write_string('>')
         self.lcd.cursor_pos = (0,1)
-        self.lcd.write_string('Home tiskarny')
-        self.lcd.cursor_pos = (1,1)
         self.lcd.write_string('Posunout na start')
+        self.lcd.cursor_pos = (1,1)
+        self.lcd.write_string('Kalibrace Z osy')
         self.lcd.cursor_pos = (2,1)
         self.lcd.write_string('Vytlacit trysku')
         self.lcd.cursor_pos = (3,1)
@@ -422,51 +424,3 @@ class Menu():
     def rpi_info(self):
         self.lcd_thread = threading.Thread(target=self.update_display)
         self.lcd_thread.start()
-        
-# #menu xD
-# menu = Menu(lcd)
-#     
-# #Main loop zde
-# try:
-#     while True:
-#         #Exit cudlik handle (event mi nefacha)
-#         if not GPIO.input(exitBut) and menu.in_menu:
-#             menu.on_exit_click()
-#         
-#         #Enkoder a menu handle (hybani se atd)
-#         clkState = GPIO.input(clk)
-#         dtState = GPIO.input(dt)
-#         if clkState != clkLastState:
-#             if dtState != clkState:
-#                 menu.moove_down()
-#                 if not menu.in_menu: 
-#                     menu.beep()
-#                 if menu.in_led_menu:
-#                     menu.led_brightness += 1
-#                     menu.update_infopanel()
-#             else:
-#                 menu.moove_up()
-#                 if not menu.in_menu: 
-#                     menu.beep()
-#                 if menu.in_led_menu:
-#                     menu.led_brightness -= 1
-#                     menu.update_infopanel()
-#         clkLastState = clkState
-#         sleep(0.01)
-# #Po exitu se vycisti display a GPIO cleanup
-# finally:
-#     lcd.clear()
-#     sleep(1)
-#     GPIO.cleanup()
-       
-
-
-
-
-
-
-
-
-
-
-
