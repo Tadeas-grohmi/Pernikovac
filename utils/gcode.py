@@ -46,7 +46,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
             elif i < 15:
                 current_extruder += extruder_increment  
             elif i > total_contours - (total_contours // 4):
-                current_extruder += default_extruder - (default_extruder / 1.2)  
+                current_extruder += default_extruder - (default_extruder // 2)  
             else:
                 current_extruder += default_extruder  
             
@@ -54,8 +54,8 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
             
             #Start extruze u prvniho conturu
             if i == 0 and j == 0:
-                gcode_commands.append(f'G1 X{x_mm:.2f} Y{y_mm:.2f} Z{z_off + 5} E0 F1500.0')
-                gcode_commands.append(f'G1 Z3.2 F200.0')
+                gcode_commands.append(f'G1 X{x_mm:.2f} Y{y_mm:.2f} Z{(z_off + 5):.3f} E0 F1500.0')
+                gcode_commands.append(f'G1 Z{(z_off - 0.5):.3f} F200.0')
                 gcode_commands.append(f'G4 P150')
                 gcode_commands.append(f'G1 E50')
                 gcode_commands.append(f'G4 P850')
@@ -65,7 +65,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
 
     #Retrakce extruderu
     gcode_commands.append(f'G4 P1000')
-    gcode_commands.append(f'G1 Z{z_off + 15} E{current_extruder - (current_extruder/2)} F350')
+    gcode_commands.append(f'G1 Z{(z_off + 15):.3f} E{((current_extruder - (current_extruder/2)) + 30):.3f} F350')
     
     #Moove do standby pozice
     gcode_commands.append(f'G1 X0 Y210 Z20.0 F2000')

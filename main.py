@@ -123,8 +123,8 @@ def encoder_button_callback(channel):
             
             gcode = con_to_gcode(contours,pic, json_dict, lcd_menu.extruder_rate, lcd_menu.z_offset)
             
-            #for line in gcode:
-                #print(line)
+            for line in gcode:
+                print(line)
                 
             printer.shake() #Bordel z trysky pryc
             printer.write_gcodelist(gcode)
@@ -181,7 +181,7 @@ try:
                    lcd_menu.update_infopanel()
                    lcd_menu.apply_duty()
                #Handle zmeny tvaru
-               if lcd_menu.in_manual_mode_menu:
+               if lcd_menu.in_manual_mode_menu and not lcd_menu.printing:
                    lcd_menu.shape -= 1
                    if lcd_menu.shape < 0:
                        lcd_menu.shape = 0
@@ -207,7 +207,7 @@ try:
                    lcd_menu.update_infopanel()
                    lcd_menu.apply_duty()
                #Handle zmeny tvaru
-               if lcd_menu.in_manual_mode_menu:
+               if lcd_menu.in_manual_mode_menu and not lcd_menu.printing:
                    lcd_menu.shape += 1
                    if lcd_menu.shape > 1:
                        lcd_menu.shape = 1
