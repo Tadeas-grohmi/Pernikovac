@@ -11,6 +11,7 @@ from utils.lcdmenu import *
 from utils.gcode import *
 import RPILCD.gpio as rpilcd
 from utils.VLX.VL53L0X_python.python import VL53L0X
+from utils.shapes import *
 
 #Promenne
 DEBUG = False
@@ -114,11 +115,18 @@ def encoder_button_callback(channel):
             lcd_menu.print_menu()
             contours, _, pic, json_dict, middle_point = detect_object(image, dictionary, parameters, DEBUG)
             
+            match lcd_menu.shape:
+                case 0: #Klasika
+                    contours = contours
+                case 1: #Double
+                    contours = double(contours,middle_point, pic)
+            
             gcode = con_to_gcode(contours,pic, json_dict, lcd_menu.extruder_rate, lcd_menu.z_offset)
             
             #for line in gcode:
                 #print(line)
                 
+            printer.shake() #Bordel z trysky pryc
             printer.write_gcodelist(gcode)
             print("END---------------------------------")
             lcd_menu.printing = False
@@ -172,6 +180,13 @@ try:
                    #Update a write hodnot
                    lcd_menu.update_infopanel()
                    lcd_menu.apply_duty()
+               #Handle zmeny tvaru
+               if lcd_menu.in_manual_mode_menu:
+                   lcd_menu.shape -= 1
+                   if lcd_menu.shape < 0:
+                       lcd_menu.shape = 0
+                   
+                   lcd_menu.update_manualmode()
            else:
                #Pohyb nahoru
                lcd_menu.moove_up()
@@ -191,6 +206,13 @@ try:
                    #Update a write hodnot
                    lcd_menu.update_infopanel()
                    lcd_menu.apply_duty()
+               #Handle zmeny tvaru
+               if lcd_menu.in_manual_mode_menu:
+                   lcd_menu.shape += 1
+                   if lcd_menu.shape > 1:
+                       lcd_menu.shape = 1
+                   
+                   lcd_menu.update_manualmode()
        #Ende
        clkLastState = clkState
        sleep(0.02)

@@ -202,6 +202,23 @@ class Printer():
         
         return printer_in
     
+    def shake(self):
+        if self.homed:
+            gcode_list = ["G1 Z0 F1000", "P1500", "G1 Y170 F1500", "G1 Y210 F1500", "G1 Y170 F1500", "G1 Y210 F1500", "G1 Z10 F1000"]
+            for line in gcode_list:
+                try:
+                    self.printerSerial.write((line + '\n').encode())
+                    while True:
+                        response = self.printerSerial.readline().decode().strip()
+                        if response == 'ok':
+                            break
+                except:
+                    pass
+        else:
+            self.home()
+        
+        
+    
     def write_gcodelist(self, gcode_list):
         if not self.homed:
             self.home()

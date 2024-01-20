@@ -24,7 +24,9 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
     default_extruder = extruder_rate #0,55
     
     extruder_increment = 1.6  # Increment pro prvnich 15
-    extruder_decrement = 0.2  # Decrement pro poslednich 20 
+    extruder_decrement = 0.2  # Decrement pro posledni 1/3
+    
+    total_contours = len(contours)
     
     for i, contour in enumerate(contours):
         for j, point in enumerate(contour):
@@ -41,10 +43,10 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
             #Uprava extruze
             if i < 5:
                 current_extruder += extruder_increment * 1.8
-            if i < 15:
+            elif i < 15:
                 current_extruder += extruder_increment  
-            elif i >= len(contours) - 25:
-                current_extruder += default_extruder - extruder_decrement  
+            elif i > total_contours - (total_contours // 4):
+                current_extruder += default_extruder - (default_extruder / 1.2)  
             else:
                 current_extruder += default_extruder  
             
@@ -59,7 +61,7 @@ def con_to_gcode(contours, image, json_dict, extruder_rate, z_off):
                 gcode_commands.append(f'G4 P850')
                 gcode_commands.append(f'G92 E0')
             else:
-                gcode_commands.append(f'G1 X{x_mm:.3f} Y{y_mm:.3f} Z{z_off} E{current_extruder:.3f} F200.0')
+                gcode_commands.append(f'G1 X{x_mm:.3f} Y{y_mm:.3f} Z{z_off:.3f} E{current_extruder:.3f} F210.0')
 
     #Retrakce extruderu
     gcode_commands.append(f'G4 P1000')

@@ -53,6 +53,7 @@ class Menu():
         self.update_sensor = False
         self.printing = False
         self.in_printer_settings = False
+        self.shape = 0 # 0-basic, 1-double
         #promenne s zmenou
         self.led_brightness = 0
         self.z_offset = 0
@@ -279,11 +280,19 @@ class Menu():
     def manualmode(self):
         self.lcd.clear()
         self.in_manual_mode_menu = True
-        self.lcd.write_string('\x01')
-        self.lcd.cursor_pos = (0,1)
-        self.lcd.write_string('pernikovac te vita')
-        self.lcd.write_string('\x01')
-        
+        #self.lcd.write_string('\x01')
+        #self.lcd.cursor_pos = (0,1)
+        #self.lcd.write_string('pernikovac te vita')
+        #self.lcd.write_string('\x01')
+        self.lcd.cursor_pos = (0,0)
+        self.lcd.write_string('Motiv:')
+        self.lcd.cursor_pos = (0,6)
+        match self.shape:
+            case 0:
+                self.lcd.write_string('klasik')
+            case 1:
+                self.lcd.write_string('double')
+            
         self.lcd.cursor_pos = (1,0)
         self.lcd.write_string('1.Vloz pernicek')
         
@@ -292,6 +301,29 @@ class Menu():
         
         self.lcd.cursor_pos = (3,0)
         self.lcd.write_string('3.Uzivej pernicek')
+    
+    def update_manualmode(self):
+        if self.in_manual_mode_menu:
+            self.lcd.clear()
+            self.lcd.cursor_pos = (0,0)
+            self.lcd.write_string('Motiv:')
+            self.lcd.cursor_pos = (0,6)
+            match self.shape:
+                case 0:
+                    self.lcd.write_string('klasik')
+                case 1:
+                    self.lcd.write_string('double')
+                
+            self.lcd.cursor_pos = (1,0)
+            self.lcd.write_string('1.Vloz pernicek')
+            
+            self.lcd.cursor_pos = (2,0)
+            self.lcd.write_string('2.Zmackni enkoder')
+            
+            self.lcd.cursor_pos = (3,0)
+            self.lcd.write_string('3.Uzivej pernicek')
+            
+        
         
     #render print menu
     def print_menu(self):
