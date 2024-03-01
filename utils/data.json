@@ -1,5 +1,5 @@
 {
   "led_brightness": 100,
-  "z_offset": 3.700000000000004,
-  "extruder_rate": 0.1499999999999997
+  "z_offset": 4.4,
+  "extruder_rate": 0.32999999999999985
 }

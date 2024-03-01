@@ -216,8 +216,6 @@ class Printer():
                     pass
         else:
             self.home()
-        
-        
     
     def write_gcodelist(self, gcode_list):
         if not self.homed:
@@ -232,7 +230,6 @@ class Printer():
             except:
                 return True
 
-        
         return True
                         
             

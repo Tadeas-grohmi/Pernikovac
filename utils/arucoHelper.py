@@ -27,13 +27,11 @@ def ArucoPoints(markerCorners, markerIds, image, DEBUG):
                 if DEBUG:
                     cv2.circle(image, (int(corner[0]), int(corner[1])), 3, (0, 255, 255), -1)
 
-            # Calculate the centroid of the marker
             cx = int((markerCorner[0][0] + markerCorner[2][0]) / 2)
             cy = int((markerCorner[0][1] + markerCorner[2][1]) / 2)
 
             midPoint_list.append([cx, cy])
 
-            # Draw a point on the centroid of the marker
             if DEBUG:
                 cv2.circle(image, (cx, cy), 3, (0, 255, 0), -1)
             corner_list.append(append_list)
@@ -47,13 +45,24 @@ def bottom_right_corner(corner_coords):
     bottom_right_corner = corner_coords[bottom_right_index]
     return list(bottom_right_corner)
 
-#bottom left corner
-def bottom_left_corner(corner_coords):
+#bottom left corner old
+def bottom_left_corner_old(corner_coords):
     corner_coords = np.array(corner_coords)
     bottom_left_index = np.argmin(corner_coords[:, 0])
     bottom_left_corner = corner_coords[bottom_left_index]
     return list(bottom_left_corner)
 
+#bottom left corner
+def bottom_left_corner(points):
+    points = np.array(points)
+    min_x_index = np.argmin(points[:, 0])
+    min_y_index = np.argmin(points[:, 1])
+    if min_x_index == min_y_index:
+        left_bottom_point = points[min_x_index]
+    else:
+        left_bottom_point = np.min([points[min_x_index], points[min_y_index]], axis=0)
+    return list(left_bottom_point)
+    
 
 #Klasifikace aruco bodu 
 def crop_coords(image, midPointList,cornerList, DEBUG):
@@ -128,11 +137,16 @@ def get_contours(image_np, DEBUG):
     pic = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
     #pic = cv2.rotate(pic, cv2.ROTATE_180)
     gray = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
+    if DEBUG:
+        cv2.imshow('Input', pic)
+        cv2.imshow('gray', gray)
     gray = cv2.GaussianBlur(gray, (13, 13), 0)
+    if DEBUG:
+        cv2.imshow('GaussianBlur', gray)
     
-    max_value = 255  # Maximum value for threshold
-    block_size = 951  # Size of the neighborhood area
-    constant = 23  # Constant subtracted from the mean
+    max_value = 255  # Maximalni hodnota
+    block_size = 951  # Sousedici plocha
+    constant = 23  # Odectena konstanta
 
     thresh = cv2.adaptiveThreshold(gray, max_value, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block_size,constant)
     
@@ -140,10 +154,10 @@ def get_contours(image_np, DEBUG):
     contours, hierarchy = cv2.findContours(image=imagem, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)
     image_copy = pic.copy()
     
-    x_min = 45  # Minimum X coordinate 45
-    x_max = 800  # Maximum X coordinate 800
-    y_min = 25  # Minimum Y coordinate 0
-    y_max = 765  # Maximum Y coordinate 765 794
+    x_min = 45  # Minimum X - 45
+    x_max = 800  # Maximum X - 800
+    y_min = 25  # Minimum Y - 0
+    y_max = 765  # Maximum Y - 765 
     
     #Filtr nepotrebnych conturu (mimo dosah tiskarny)
     filtered_contours = [contour for contour in contours if x_min <= cv2.boundingRect(contour)[0] <= x_max
@@ -172,7 +186,7 @@ def get_contours(image_np, DEBUG):
     scaled_contour = scaled_contour.reshape((-1, 1, 2)).astype(np.int32)
     
     if DEBUG:
-        cv2.imshow('Tresh', thresh)
+        cv2.imshow('AdaptiveThresh', thresh)
         cv2.drawContours(image_copy, filtered_contours, -1, (200, 255, 0), 6)
         cv2.polylines(image_copy, [scaled_contour], isClosed=True, color=(0, 0, 255), thickness=1)
     

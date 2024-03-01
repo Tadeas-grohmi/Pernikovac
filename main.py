@@ -1,15 +1,13 @@
 #Made by Tadeas-grohmi with love <3
-import cv2
-import numpy
+import cv2, time
 import numpy as np
-import time
+from PIL import Image
+import RPILCD.gpio as rpilcd
 from utils.arucoHelper import *
 from utils.math import *
-from PIL import Image
 from utils.printer import *
 from utils.lcdmenu import *
 from utils.gcode import *
-import RPILCD.gpio as rpilcd
 from utils.VLX.VL53L0X_python.python import VL53L0X
 from utils.shapes import *
 
@@ -123,8 +121,8 @@ def encoder_button_callback(channel):
             
             gcode = con_to_gcode(contours,pic, json_dict, lcd_menu.extruder_rate, lcd_menu.z_offset)
             
-            for line in gcode:
-                print(line)
+            #for line in gcode:
+                #print(line)
                 
             printer.shake() #Bordel z trysky pryc
             printer.write_gcodelist(gcode)
